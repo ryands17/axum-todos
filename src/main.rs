@@ -1,3 +1,4 @@
+mod errors;
 mod todos;
 
 use std::net::SocketAddr;
@@ -11,7 +12,8 @@ use crate::todos::todos_service;
 async fn main() -> Result<()> {
   // initialise tracing
   tracing_subscriber::fmt()
-    .with_max_level(tracing::Level::DEBUG)
+    .with_max_level(tracing::Level::INFO)
+    // .with_max_level(tracing::Level::DEBUG)
     .with_line_number(true)
     .init();
 
