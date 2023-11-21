@@ -6,8 +6,6 @@ use std::net::SocketAddr;
 use anyhow::Result;
 use axum::{routing::get, Router};
 
-use crate::todos::todos_service;
-
 #[tokio::main]
 async fn main() -> Result<()> {
   // initialise tracing
@@ -19,7 +17,7 @@ async fn main() -> Result<()> {
 
   let app = Router::new()
     .route("/", get(hello))
-    .nest("/todos", todos_service());
+    .nest("/todos", todos::todos_service());
 
   let addr = SocketAddr::from(([0, 0, 0, 0], 3001));
 

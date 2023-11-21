@@ -13,7 +13,7 @@ use uuid::Uuid;
 use crate::errors::ApiError;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct Todo {
+pub(crate) struct Todo {
   id: String,
   text: String,
   done: bool,
@@ -22,7 +22,7 @@ struct Todo {
 type Store = Mutex<Vec<Todo>>;
 type MainState = State<Arc<Store>>;
 
-pub fn todos_service() -> Router {
+pub(crate) fn todos_service() -> Router {
   let initial_todos: Vec<Todo> = vec![
     Todo {
       id: Uuid::new_v4().to_string(),
@@ -44,14 +44,17 @@ pub fn todos_service() -> Router {
     .with_state(store)
 }
 
-async fn get_todos(State(store): MainState) -> Json<Vec<Todo>> {
+pub(crate) async fn get_todos(State(store): MainState) -> Json<Vec<Todo>> {
   tracing::info!("fetching todos from in-memory store");
 
   let todos = store.lock().await.clone();
   Json(todos)
 }
 
-async fn toggle_todo(Path(id): Path<String>, State(store): MainState) -> impl IntoResponse {
+pub(crate) async fn toggle_todo(
+  Path(id): Path<String>,
+  State(store): MainState,
+) -> impl IntoResponse {
   let mut todos = store.lock().await;
 
   tracing::info!("trying to toggle todo: {id}");
@@ -66,7 +69,10 @@ async fn toggle_todo(Path(id): Path<String>, State(store): MainState) -> impl In
     .unwrap_or(ApiError::TodoNotFound(id).into_response())
 }
 
-async fn delete_todo(Path(id): Path<String>, State(store): MainState) -> impl IntoResponse {
+pub(crate) async fn delete_todo(
+  Path(id): Path<String>,
+  State(store): MainState,
+) -> impl IntoResponse {
   let mut todos = store.lock().await;
   let len = todos.len();
 
@@ -82,11 +88,11 @@ async fn delete_todo(Path(id): Path<String>, State(store): MainState) -> impl In
 }
 
 #[derive(Deserialize)]
-struct CreateTodo {
+pub(crate) struct CreateTodo {
   text: String,
 }
 
-async fn create_todo(
+pub(crate) async fn create_todo(
   State(store): MainState,
   extract::Json(body): extract::Json<CreateTodo>,
 ) -> impl IntoResponse {
@@ -103,7 +109,7 @@ async fn create_todo(
   Json(new_todo).into_response()
 }
 
-async fn edit_todo(
+pub(crate) async fn edit_todo(
   State(store): MainState,
   Path(id): Path<String>,
   extract::Json(body): extract::Json<CreateTodo>,

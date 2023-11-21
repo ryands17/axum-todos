@@ -30,7 +30,7 @@ impl IntoResponse for ApiError {
       }
       ApiError::TodoNotFound(id) => (
         StatusCode::NOT_FOUND,
-        format!("Todo with id: {id} not found!"),
+        format!("Todo with id: {id:?} not found!"),
       ),
     };
 
