@@ -6,7 +6,7 @@ use axum::{
 use serde_json::json;
 
 // errors with anyhow and convert into response
-pub enum ApiError {
+pub(crate) enum ApiError {
   InternalServerError(anyhow::Error),
   TodoNotFound(String),
 }
