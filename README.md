@@ -12,6 +12,8 @@ To install `cargo-watch`:
 cargo install cargo-watch
 ```
 
+To run the server in watch mode:
+
 ```sh
 cargo watch -c -w src -x run
 ```
