@@ -6,6 +6,12 @@ use std::net::SocketAddr;
 use anyhow::Result;
 use axum::{routing::get, Router};
 
+pub(crate) fn router() -> Router {
+  Router::new()
+    .route("/", get(hello))
+    .nest("/todos", todos::todos_service())
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
   // initialise tracing
@@ -15,10 +21,7 @@ async fn main() -> Result<()> {
     .with_line_number(true)
     .init();
 
-  let app = Router::new()
-    .route("/", get(hello))
-    .nest("/todos", todos::todos_service());
-
+  let app = router();
   let addr = SocketAddr::from(([0, 0, 0, 0], 3001));
 
   tracing::info!("App running on http://{}", addr);

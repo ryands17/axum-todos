@@ -13,7 +13,7 @@ use uuid::Uuid;
 use crate::errors::ApiError;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub(crate) struct Todo {
+struct Todo {
   id: String,
   text: String,
   done: bool,
@@ -44,17 +44,14 @@ pub(crate) fn todos_service() -> Router {
     .with_state(store)
 }
 
-pub(crate) async fn get_todos(State(store): MainState) -> Json<Vec<Todo>> {
+async fn get_todos(State(store): MainState) -> Json<Vec<Todo>> {
   tracing::info!("fetching todos from in-memory store");
 
   let todos = store.lock().await.clone();
   Json(todos)
 }
 
-pub(crate) async fn toggle_todo(
-  Path(id): Path<String>,
-  State(store): MainState,
-) -> impl IntoResponse {
+async fn toggle_todo(Path(id): Path<String>, State(store): MainState) -> impl IntoResponse {
   let mut todos = store.lock().await;
 
   tracing::info!("trying to toggle todo: {id}");
@@ -69,10 +66,7 @@ pub(crate) async fn toggle_todo(
     .unwrap_or(ApiError::TodoNotFound(id).into_response())
 }
 
-pub(crate) async fn delete_todo(
-  Path(id): Path<String>,
-  State(store): MainState,
-) -> impl IntoResponse {
+async fn delete_todo(Path(id): Path<String>, State(store): MainState) -> impl IntoResponse {
   let mut todos = store.lock().await;
   let len = todos.len();
 
@@ -87,12 +81,12 @@ pub(crate) async fn delete_todo(
   }
 }
 
-#[derive(Deserialize)]
-pub(crate) struct CreateTodo {
+#[derive(Deserialize, Serialize)]
+struct CreateTodo {
   text: String,
 }
 
-pub(crate) async fn create_todo(
+async fn create_todo(
   State(store): MainState,
   extract::Json(body): extract::Json<CreateTodo>,
 ) -> impl IntoResponse {
@@ -109,7 +103,7 @@ pub(crate) async fn create_todo(
   Json(new_todo).into_response()
 }
 
-pub(crate) async fn edit_todo(
+async fn edit_todo(
   State(store): MainState,
   Path(id): Path<String>,
   extract::Json(body): extract::Json<CreateTodo>,
@@ -126,4 +120,61 @@ pub(crate) async fn edit_todo(
       Json(todo.clone()).into_response()
     })
     .unwrap_or(ApiError::TodoNotFound(id).into_response())
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+  use axum_test_helper::TestClient;
+
+  async fn setup_tests() -> TestClient {
+    let app = crate::router();
+    TestClient::new(app)
+  }
+
+  #[tokio::test]
+  async fn test_get_todos() {
+    let client = setup_tests().await;
+
+    let res = client.get("/todos").send().await;
+
+    assert_eq!(res.status(), StatusCode::OK);
+
+    let todos: Vec<Todo> = res.json().await;
+    assert_eq!(todos.len(), 2);
+  }
+
+  #[tokio::test]
+  async fn test_create_todo() {
+    let client = setup_tests().await;
+
+    let new_todo = CreateTodo {
+      text: "Learn Rust".to_string(),
+    };
+
+    let res = client.post("/todos").json(&new_todo).send().await;
+
+    assert_eq!(res.status(), StatusCode::OK);
+    let new_todo: Todo = res.json().await;
+    assert_eq!(new_todo.text, "Learn Rust");
+
+    let res = client.get("/todos").send().await;
+    let todos: Vec<Todo> = res.json().await;
+    assert_eq!(todos.len(), 3);
+  }
+
+  #[tokio::test]
+  async fn test_edit_todo() {
+    let client = setup_tests().await;
+
+    let todo_text = CreateTodo {
+      text: "Learn Rust".to_string(),
+    };
+
+    let res = client.post("/todos").json(&todo_text).send().await;
+
+    assert_eq!(res.status(), StatusCode::OK);
+    let edited_todo: Todo = res.json().await;
+    assert_eq!(edited_todo.text, "Learn Rust");
+  }
 }
