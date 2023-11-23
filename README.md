@@ -1,6 +1,6 @@
 # Todos API
 
-This is a simple Todos API made in Rust using Axum. This is a learning project with the accompanying blog post to be created soon.
+This is a simple Todos API made in Rust using Axum. This is a learning project with a blog post explaining this: [Creating APIs with Rust and Axum](https://ryan17.dev/blog/apis-with-rust-and-axum).
 
 ## Commands
 
