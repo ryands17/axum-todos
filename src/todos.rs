@@ -15,7 +15,7 @@ use crate::errors::ApiError;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct Todo {
   id: String,
-  text: String,
+  text: Arc<str>,
   done: bool,
 }
 
@@ -26,12 +26,12 @@ pub(crate) fn todos_service() -> Router {
   let initial_todos: Vec<Todo> = vec![
     Todo {
       id: Uuid::new_v4().to_string(),
-      text: "Learn React".to_string(),
+      text: "Learn React".into(),
       done: false,
     },
     Todo {
       id: Uuid::new_v4().to_string(),
-      text: "Learn Vim".to_string(),
+      text: "Learn Vim".into(),
       done: true,
     },
   ];
@@ -95,7 +95,7 @@ async fn create_todo(
 
   let new_todo = Todo {
     id: Uuid::new_v4().to_string(),
-    text: body.text,
+    text: body.text.into(),
     done: false,
   };
 
@@ -116,7 +116,7 @@ async fn edit_todo(
     .iter_mut()
     .find(|todo| todo.id == id)
     .map(|todo| {
-      todo.text = body.text;
+      todo.text = body.text.into();
       Json(todo.clone()).into_response()
     })
     .unwrap_or(ApiError::TodoNotFound(id).into_response())
@@ -156,7 +156,7 @@ mod tests {
 
     assert_eq!(res.status(), StatusCode::OK);
     let new_todo: Todo = res.json().await;
-    assert_eq!(new_todo.text, "Learn Rust");
+    assert_eq!(new_todo.text, "Learn Rust".into());
 
     let res = client.get("/todos").send().await;
     let todos: Vec<Todo> = res.json().await;
@@ -175,6 +175,6 @@ mod tests {
 
     assert_eq!(res.status(), StatusCode::OK);
     let edited_todo: Todo = res.json().await;
-    assert_eq!(edited_todo.text, "Learn Rust");
+    assert_eq!(edited_todo.text, "Learn Rust".into());
   }
 }
