@@ -1,10 +1,9 @@
 mod errors;
 mod todos;
 
-use std::net::SocketAddr;
-
 use anyhow::Result;
 use axum::{routing::get, Router};
+use tokio::net::TcpListener;
 
 pub(crate) fn router() -> Router {
   Router::new()
@@ -22,13 +21,12 @@ async fn main() -> Result<()> {
     .init();
 
   let app = router();
-  let addr = SocketAddr::from(([0, 0, 0, 0], 3001));
+  let listener = TcpListener::bind("127.0.0.1:3001").await.unwrap();
+  let addr = listener.local_addr().unwrap().to_string();
 
   tracing::info!("App running on http://{}", addr);
 
-  axum::Server::bind(&addr)
-    .serve(app.into_make_service())
-    .await?;
+  axum::serve(listener, app.into_make_service()).await?;
 
   Ok(())
 }
