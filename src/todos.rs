@@ -125,7 +125,9 @@ async fn edit_todo(
 #[cfg(test)]
 mod tests {
   use super::*;
-  use axum_test_helper::TestClient;
+  extern crate tester;
+
+  use tester::TestClient;
 
   async fn setup_tests() -> TestClient {
     let app = crate::router();
@@ -135,7 +137,6 @@ mod tests {
   #[tokio::test]
   async fn test_get_todos() {
     let client = setup_tests().await;
-
     let res = client.get("/todos").send().await;
 
     assert_eq!(res.status(), StatusCode::OK);
