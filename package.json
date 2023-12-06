@@ -4,9 +4,9 @@
   "description": "This is a simple Todos API made in Rust using Axum. This is a learning project with a blog post explaining this: [Creating APIs with Rust and Axum](https://ryan17.dev/blog/apis-with-rust-and-axum).",
   "main": "index.js",
   "scripts": {
-    "test": "cargo test -p app",
+    "dev": "cargo watch -c -w app/src -x 'run -p app'",
     "build": "cargo build -p app --release",
-    "dev": "cargo watch -c -w app/src -x 'run -p app'"
+    "test": "cargo test -p app"
   },
   "keywords": [],
   "author": "",
@@ -15,8 +15,10 @@
     "prettier": "^3.1.0",
     "prettier-plugin-toml": "^2.0.1"
   },
-  "prettier":{
+  "prettier": {
     "singleQuote": true,
-    "plugins": ["prettier-plugin-toml"]
+    "plugins": [
+      "prettier-plugin-toml"
+    ]
   }
 }
