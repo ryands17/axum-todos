@@ -125,8 +125,6 @@ async fn edit_todo(
 #[cfg(test)]
 mod tests {
   use super::*;
-  extern crate tester;
-
   use tester::TestClient;
 
   async fn setup_tests() -> TestClient {
