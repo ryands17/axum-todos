@@ -10,3 +10,8 @@ target/
 # MSVC Windows builds of rustc generate these, which store debugging information
 *.pdb
 
+# NPM stuff
+node_modules
+
+# mics
+.DS_Store

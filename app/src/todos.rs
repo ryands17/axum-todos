@@ -56,14 +56,13 @@ async fn toggle_todo(Path(id): Path<String>, State(store): MainState) -> impl In
 
   tracing::info!("trying to toggle todo: {id}");
 
-  todos
-    .iter_mut()
-    .find(|todo| todo.id == id)
-    .map(|todo| {
+  todos.iter_mut().find(|todo| todo.id == id).map_or_else(
+    || ApiError::TodoNotFound(id).into_response(),
+    |todo| {
       todo.done = !todo.done;
       StatusCode::OK.into_response()
-    })
-    .unwrap_or(ApiError::TodoNotFound(id).into_response())
+    },
+  )
 }
 
 async fn delete_todo(Path(id): Path<String>, State(store): MainState) -> impl IntoResponse {
@@ -112,14 +111,13 @@ async fn edit_todo(
 
   tracing::info!("trying to edit todo: {id}");
 
-  todos
-    .iter_mut()
-    .find(|todo| todo.id == id)
-    .map(|todo| {
+  todos.iter_mut().find(|todo| todo.id == id).map_or_else(
+    || ApiError::TodoNotFound(id).into_response(),
+    |todo| {
       todo.text = body.text.into();
       Json(todo.clone()).into_response()
-    })
-    .unwrap_or(ApiError::TodoNotFound(id).into_response())
+    },
+  )
 }
 
 #[cfg(test)]
