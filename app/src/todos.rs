@@ -10,11 +10,20 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 use uuid::Uuid;
 
-use crate::errors::ApiError;
+use crate::errors::ApiErrors;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct Id(String);
+
+impl From<Uuid> for Id {
+  fn from(id: Uuid) -> Self {
+    Id(id.to_string())
+  }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct Todo {
-  id: String,
+  id: Id,
   text: Arc<str>,
   done: bool,
 }
@@ -25,12 +34,12 @@ type MainState = State<Arc<Store>>;
 pub(crate) fn todos_service() -> Router {
   let initial_todos: Vec<Todo> = vec![
     Todo {
-      id: Uuid::new_v4().to_string(),
+      id: Uuid::new_v4().into(),
       text: "Learn React".into(),
       done: false,
     },
     Todo {
-      id: Uuid::new_v4().to_string(),
+      id: Uuid::new_v4().into(),
       text: "Learn Vim".into(),
       done: true,
     },
@@ -56,8 +65,8 @@ async fn toggle_todo(Path(id): Path<String>, State(store): MainState) -> impl In
 
   tracing::info!("trying to toggle todo: {id}");
 
-  todos.iter_mut().find(|todo| todo.id == id).map_or_else(
-    || ApiError::TodoNotFound(id).into_response(),
+  todos.iter_mut().find(|todo| todo.id.0 == id).map_or_else(
+    || ApiErrors::TodoNotFound(id).into_response(),
     |todo| {
       todo.done = !todo.done;
       StatusCode::OK.into_response()
@@ -71,12 +80,12 @@ async fn delete_todo(Path(id): Path<String>, State(store): MainState) -> impl In
 
   tracing::info!("trying to delete todo: {id}");
 
-  todos.retain(|todo| todo.id != id);
+  todos.retain(|todo| todo.id.0 != id);
 
   if todos.len() != len {
     StatusCode::OK.into_response()
   } else {
-    ApiError::TodoNotFound(id).into_response()
+    ApiErrors::TodoNotFound(id).into_response()
   }
 }
 
@@ -93,13 +102,13 @@ async fn create_todo(
   tracing::info!("creating todo: {:?}", body.text);
 
   let new_todo = Todo {
-    id: Uuid::new_v4().to_string(),
+    id: Uuid::new_v4().into(),
     text: body.text.into(),
     done: false,
   };
 
   todos.push(new_todo.clone());
-  Json(new_todo).into_response()
+  Json(new_todo)
 }
 
 async fn edit_todo(
@@ -111,8 +120,8 @@ async fn edit_todo(
 
   tracing::info!("trying to edit todo: {id}");
 
-  todos.iter_mut().find(|todo| todo.id == id).map_or_else(
-    || ApiError::TodoNotFound(id).into_response(),
+  todos.iter_mut().find(|todo| todo.id.0 == id).map_or_else(
+    || ApiErrors::TodoNotFound(id).into_response(),
     |todo| {
       todo.text = body.text.into();
       Json(todo.clone()).into_response()

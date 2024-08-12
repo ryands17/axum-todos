@@ -4,42 +4,28 @@ use axum::{
   Json,
 };
 use serde_json::json;
+use thiserror::Error;
 
-// errors with anyhow and convert into response
-pub(crate) enum ApiError {
-  InternalServerError(anyhow::Error),
+#[derive(Debug, Error)]
+pub(crate) enum ApiErrors {
+  #[error("Todo with id {0} not found")]
   TodoNotFound(String),
 }
 
-impl From<anyhow::Error> for ApiError {
-  fn from(inner: anyhow::Error) -> Self {
-    ApiError::InternalServerError(inner)
-  }
-}
-
-// Tell axum how to convert `AppError` into a response.
-impl IntoResponse for ApiError {
+impl IntoResponse for ApiErrors {
   fn into_response(self) -> Response {
-    let (status, error_message) = match self {
-      ApiError::InternalServerError(error) => {
-        tracing::error!("stacktrace: {}", error.backtrace());
-        (
-          StatusCode::INTERNAL_SERVER_ERROR,
-          "Something went wrong!".to_string(),
-        )
-      }
-      ApiError::TodoNotFound(id) => (
-        StatusCode::NOT_FOUND,
-        format!("Todo with id: {id:?} not found!"),
-      ),
+    let (status_code, error_message) = match self {
+      ApiErrors::TodoNotFound(_) => (StatusCode::NOT_FOUND, self.to_string()),
     };
 
-    let body = json!({
-      "error": error_message
-    });
+    tracing::error!("Error: {status_code:?} with message {error_message:?}");
 
-    tracing::error!("Error: {status:?} with message {error_message:?}");
-
-    (status, Json(body)).into_response()
+    (
+      status_code,
+      Json(json!({
+        "error": error_message
+      })),
+    )
+      .into_response()
   }
 }

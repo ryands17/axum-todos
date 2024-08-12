@@ -1,8 +1,8 @@
 mod errors;
 mod todos;
 
-use anyhow::Result;
 use axum::{routing::get, Router};
+use color_eyre::eyre::Result;
 use tokio::net::TcpListener;
 
 pub(crate) fn router() -> Router {

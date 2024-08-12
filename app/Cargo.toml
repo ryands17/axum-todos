@@ -14,6 +14,11 @@ axum = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 uuid = { workspace = true }
+color-eyre = "0.6"
+thiserror = "1.0.63"
 
 [dev-dependencies]
 tester = { path = "../tester" }
+
+[profile.dev.package.backtrace]
+opt-level = 3
