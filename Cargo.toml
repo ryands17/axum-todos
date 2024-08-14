@@ -13,3 +13,6 @@ axum = "0.7.5"
 tracing = "0.1.40"
 tracing-subscriber = "0.3.18"
 uuid = { version = "1.10.0", features = ["v4", "fast-rng"] }
+
+[profile.dev.package.backtrace]
+opt-level = 3
